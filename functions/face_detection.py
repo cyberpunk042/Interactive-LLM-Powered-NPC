@@ -8,6 +8,7 @@ def save_extracted_face(image_path, output_path="face.jpg"):
 
     try:
         # Extract faces using DeepFace
+        # TODO: Brilliant but try to find the cursor and select a box around instead.
         face_objs = DeepFace.extract_faces(
             img_path=image_path,
             detector_backend='retinaface',

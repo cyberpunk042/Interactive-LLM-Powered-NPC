@@ -16,16 +16,22 @@ def main(screen, transcribed_text, player_name, game_name, characters, facial_an
     cv2.imwrite('temp/screen.jpg', screen)
 
     # Extract and Crop face
+    # TODO: consider replacement -> save_extracted_mouse_focus ?
+    # TODO: ... Saving both the fullscreen and the mouse focus ?
     output_path, coordinates = save_extracted_face(
         'temp/screen.jpg', output_path='temp/extracted_face.jpg')
 
     # Get user facial emotion
+    # TODO: Disable for now ?
+    # TODO: Or replacement for generate capture analysis ? objects, symbols, etc....
     emotion = webcam_photo_emotion_predictor()
 
     if facial_animation_switch == False:
         output_path = 'NULL'
         
     if output_path == 'NULL':
+        # TODO: Remove get_name() usage and use a hardcoded "character_name"
+        # TODO: Add the NPC / Character files
         character_name = get_name(transcribed_text, characters)
         if character_name:
             print("Character is ", character_name)
@@ -37,9 +43,10 @@ def main(screen, transcribed_text, player_name, game_name, characters, facial_an
                 transcribed_text, player_name, game_name, emotion)
         return facial_animation_video_path, audio_path, coordinates
 
+    # TODO: Changes go with the same as above. #33
     character_name = find_character_with_lowest_cosine_score(game_name,
                                                              characters, 'temp/extracted_face.jpg')
-
+    # TODO: Always generate a background character
     if character_name == 'NULL':
         facial_animation_video_path, audio_path = video_generate_background_character(
             transcribed_text, player_name, game_name, 'temp/extracted_face.jpg', emotion)
