@@ -9,49 +9,42 @@ from functions.video_generate_background_character import video_generate_backgro
 from functions.video_generate_side_character import video_generate_side_character
 
 
-def main(screen, transcribed_text, player_name, game_name, characters, facial_animation_switch):
+def main(screen, transcribed_text, player_name, game_name, background_character_mode = False):
     facial_animation_video_path, audio_path, coordinates = '', '', ''
 
     # Save the screen capture to a file
-    cv2.imwrite('temp/screen.jpg', screen)
+    #cv2.imwrite('temp/screen.jpg', screen)
+    
+    cursor_pos = win32api.GetCursorPos()
+    x, y = cursor_pos
+    capture = screen.copy()
+    cropped_capture = capture[max(0, y-50):min(screen.shape[0], y+50), max(0, x-50):min(screen.shape[1], x+50)]
+    cv2.imwrite('temp/extracted_focus.jpg', cropped_capture)
+    output_path = 'temp/extracted_focus.jpg'
 
-    # Extract and Crop face
-    # TODO: consider replacement -> save_extracted_mouse_focus ?
-    # TODO: ... Saving both the fullscreen and the mouse focus ?
-    output_path, coordinates = save_extracted_face(
-        'temp/screen.jpg', output_path='temp/extracted_face.jpg')
+    # Clean up after the task
+    #os.remove('temp/screen.jpg')
 
-    # Get user facial emotion
-    # TODO: Disable for now ?
-    # TODO: Or replacement for generate capture analysis ? objects, symbols, etc....
-    emotion = webcam_photo_emotion_predictor()
+    coordinates = (x-50, y-50, 100, 100)  # Adjust the coordinates according to the crop size
 
-    if facial_animation_switch == False:
-        output_path = 'NULL'
+    # Set desired emotion
+    emotion = "Blissful and Fulfilled"
         
-    if output_path == 'NULL':
-        # TODO: Remove get_name() usage and use a hardcoded "character_name"
-        # TODO: Add the NPC / Character files
-        character_name = get_name(transcribed_text, characters)
-        if character_name:
-            print("Character is ", character_name)
-            audio_path = audio_generate_side_character(
-                transcribed_text, player_name, game_name, character_name, emotion)
-        else:
-            print("Character is background character")
-            audio_path = audio_generate_background_character(
-                transcribed_text, player_name, game_name, emotion)
-        return facial_animation_video_path, audio_path, coordinates
+    # TODO: Add the NPC / Character files
+    characters_folder = os.listdir(f"{game_name}/characters")
+    characters = [character for character in characters_folder if os.path.isdir(f"{game_name}/characters/{character}")]
 
-    # TODO: Changes go with the same as above. #33
-    character_name = find_character_with_lowest_cosine_score(game_name,
-                                                             characters, 'temp/extracted_face.jpg')
-    # TODO: Always generate a background character
-    if character_name == 'NULL':
-        facial_animation_video_path, audio_path = video_generate_background_character(
-            transcribed_text, player_name, game_name, 'temp/extracted_face.jpg', emotion)
+    # Hardcoded character name
+    character_name = "cuberpunk042-minion"
+    if not background_character_mode:
+        print("Character is ", character_name)
+        audio_path = audio_generate_side_character(
+            transcribed_text, player_name, game_name, character_name, 'temp/extracted_focus.jpg', emotion)
     else:
-        facial_animation_video_path, audio_path = video_generate_side_character(
-            transcribed_text, player_name, game_name, character_name, 'temp/extracted_face.jpg', emotion)
+        print("Character is background character")
+        audio_path = audio_generate_background_character(
+            transcribed_text, player_name, game_name, 'temp/extracted_focus.jpg', emotion)
 
-    return facial_animation_video_path, audio_path, coordinates
+    return audio_path, coordinates
+
+
